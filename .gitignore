@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Data & Index caches (keep structure, exclude generated binaries/pkls if desired)
+data/faiss_index/*.index
+data/faiss_index/*.pkl
+!data/faiss_index/.gitkeep
+
+# IDEs & System
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.log

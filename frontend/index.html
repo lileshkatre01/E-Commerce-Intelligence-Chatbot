@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ReviewIQ Enterprise | E-Commerce Customer Intelligence Suite</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Chart.js for Analytics Visualizations -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+  <!-- LEFT NAVIGATION SIDEBAR (Matching reference image) -->
+  <aside class="app-sidebar">
+    <div class="sidebar-top">
+      <div class="sidebar-brand">
+        <div class="brand-icon">
+          <i class="fa-solid fa-cube"></i>
+        </div>
+        <div>
+          <span class="brand-title">ReviewIQ</span>
+          <span class="brand-badge">PRO</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-label">Navigation</div>
+        <a href="#" class="nav-item active">
+          <i class="fa-solid fa-cube"></i>
+          <span>Products</span>
+        </a>
+        <a href="#" class="nav-item" id="nav-sentiment">
+          <i class="fa-solid fa-user-group"></i>
+          <span>Customers</span>
+        </a>
+        <a href="#" class="nav-item" id="nav-reviews">
+          <i class="fa-solid fa-chart-line"></i>
+          <span>Analytics</span>
+        </a>
+        <a href="#" class="nav-item" id="nav-complaints">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+          <span>Complaints</span>
+        </a>
+
+        <div class="nav-label" style="margin-top: 10px;">Workspace</div>
+        <a href="#" class="nav-item" id="btn-new-chat">
+          <i class="fa-solid fa-plus-circle"></i>
+          <span>New Analysis</span>
+        </a>
+        <a href="/docs" target="_blank" class="nav-item">
+          <i class="fa-solid fa-book"></i>
+          <span>API Docs</span>
+        </a>
+      </nav>
+    </div>
+
+    <!-- BOTTOM BLUE GRADIENT CARD (Matching "Upgrade to Premium" in screenshot) -->
+    <div class="sidebar-promo-card">
+      <div class="promo-icon-badge">
+        <i class="fa-solid fa-shield-halved"></i>
+      </div>
+      <div class="promo-title">AI Engine Active</div>
+      <div class="promo-desc">FAISS vector index and Gemini 2.5 Flash operational with 50 customer reviews.</div>
+      <button class="btn-promo" id="reindex-btn">
+        <i class="fa-solid fa-rotate"></i>
+        <span>Reload Vector Index</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN APPLICATION CONTENT -->
+  <main class="app-main">
+
+    <!-- TOP KPI ROW (4 Cards in a row, matching reference image) -->
+    <section class="kpi-row">
+      <!-- Card 1: Page Views / Total Reviews -->
+      <div class="metric-card">
+        <div class="metric-card-top">
+          <span class="metric-card-title">Total Reviews</span>
+          <div class="metric-card-icon"><i class="fa-solid fa-eye"></i></div>
+        </div>
+        <div class="metric-card-value-row">
+          <span class="metric-card-value" id="kpi-total-reviews">50</span>
+          <span class="trend-badge positive"><i class="fa-solid fa-arrow-up"></i> 100%</span>
+        </div>
+        <span class="metric-card-sub">vs. 10 products catalog</span>
+      </div>
+
+      <!-- Card 2: Visitors / Overall CSAT -->
+      <div class="metric-card">
+        <div class="metric-card-top">
+          <span class="metric-card-title">Catalog CSAT</span>
+          <div class="metric-card-icon"><i class="fa-solid fa-users"></i></div>
+        </div>
+        <div class="metric-card-value-row">
+          <span class="metric-card-value" id="kpi-avg-rating">4.32</span>
+          <span class="trend-badge positive"><i class="fa-solid fa-arrow-up"></i> 86.0%</span>
+        </div>
+        <span class="metric-card-sub">out of 5.0 satisfaction</span>
+      </div>
+
+      <!-- Card 3: Click / Complaints Rate -->
+      <div class="metric-card">
+        <div class="metric-card-top">
+          <span class="metric-card-title">Critical Issues</span>
+          <div class="metric-card-icon"><i class="fa-solid fa-arrow-pointer"></i></div>
+        </div>
+        <div class="metric-card-value-row">
+          <span class="metric-card-value" id="kpi-complaint-rate">10.0%</span>
+          <span class="trend-badge negative"><i class="fa-solid fa-arrow-down"></i> 5 Reviews</span>
+        </div>
+        <span class="metric-card-sub">1-2 star complaint rate</span>
+      </div>
+
+      <!-- Card 4: Orders / Critical Product Alert -->
+      <div class="metric-card">
+        <div class="metric-card-top">
+          <span class="metric-card-title">Issue Watchlist</span>
+          <div class="metric-card-icon"><i class="fa-solid fa-inbox"></i></div>
+        </div>
+        <div class="metric-card-value-row">
+          <span class="metric-card-value" id="kpi-worst-product">P102</span>
+          <span class="trend-badge negative"><i class="fa-solid fa-triangle-exclamation"></i> 1.8★</span>
+        </div>
+        <span class="metric-card-sub">100% negative (Lag/Heat)</span>
+      </div>
+    </section>
+
+    <!-- DASHBOARD MAIN GRID (Left 65% | Right 35%) -->
+    <div class="dashboard-grid">
+
+      <!-- LEFT COLUMN: Charts & AI Chat & Best Selling Table -->
+      <div class="grid-col-left">
+
+        <!-- 1. TOTAL SENTIMENT & RATING TREND (Matching "Total Profit" Card) -->
+        <div class="dash-card">
+          <div class="dash-card-header">
+            <div class="card-title-group">
+              <h3>Customer Sentiment & Satisfaction</h3>
+              <p>Aggregated customer ratings across catalog releases</p>
+            </div>
+            <div class="card-action-more"><i class="fa-solid fa-ellipsis"></i></div>
+          </div>
+
+          <div class="profit-stat-row">
+            <span class="profit-main-val" id="chart-main-score">4.32 CSAT</span>
+            <span class="trend-badge positive"><i class="fa-solid fa-arrow-up"></i> 86% Positive</span>
+            <span class="metric-card-sub">catalog benchmark</span>
+          </div>
+
+          <!-- Smooth Line Area Chart (Matching screenshot blue gradient wave) -->
+          <div class="chart-area-wrapper">
+            <canvas id="sentimentTrendChart"></canvas>
+          </div>
+
+          <!-- 3 Segment Bars (Matching "Customers: Retailers, Distributors, Wholesalers") -->
+          <div class="segmented-stats-bar">
+            <div class="segment-item blue">
+              <div class="segment-title-row">
+                <i class="fa-solid fa-thumbs-up"></i>
+                <span>Positive Reviews</span>
+              </div>
+              <span class="segment-val" id="seg-positive-count">43</span>
+              <span class="segment-lbl">86.0% of catalog</span>
+            </div>
+
+            <div class="segment-item green">
+              <div class="segment-title-row">
+                <i class="fa-solid fa-minus"></i>
+                <span>Neutral Reviews</span>
+              </div>
+              <span class="segment-val" id="seg-neutral-count">2</span>
+              <span class="segment-lbl">4.0% of catalog</span>
+            </div>
+
+            <div class="segment-item orange">
+              <div class="segment-title-row">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <span>Critical Complaints</span>
+              </div>
+              <span class="segment-val" id="seg-negative-count">5</span>
+              <span class="segment-lbl">10.0% of catalog</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. AI ASSISTANT CHAT CONTAINER (Matching "AI Assistant" card in screenshot) -->
+        <div class="dash-card ai-assistant-card">
+          <div class="dash-card-header">
+            <div class="card-title-group">
+              <h3>AI Customer Intelligence Assistant</h3>
+              <p>RAG vector search powered by FAISS & Gemini 2.5 Flash</p>
+            </div>
+            <div class="card-action-more" id="btn-clear-chat" title="Clear Conversation"><i class="fa-solid fa-trash-can"></i></div>
+          </div>
+
+          <!-- Suggested Query Chips (Click to ask) -->
+          <div class="suggested-chips-bar">
+            <button class="prompt-chip" data-query="Which product is the most complained about and why?">
+              <i class="fa-solid fa-triangle-exclamation"></i> Most Complained Product?
+            </button>
+            <button class="prompt-chip" data-query="What is the overall sentiment breakdown of customer reviews?">
+              <i class="fa-solid fa-chart-pie"></i> Sentiment Breakdown
+            </button>
+            <button class="prompt-chip" data-query="What are the biggest issues reported with P102?">
+              <i class="fa-solid fa-bug"></i> P102 Defects
+            </button>
+            <button class="prompt-chip" data-query="Which phone has the best battery life?">
+              <i class="fa-solid fa-battery-full"></i> Best Battery
+            </button>
+            <button class="prompt-chip" data-query="What do customers say about camera quality?">
+              <i class="fa-solid fa-camera"></i> Camera Comparison
+            </button>
+          </div>
+
+          <!-- Active Filter Pill Bar (Shown when constraints applied) -->
+          <div class="active-constraints-bar" id="active-constraints-bar" style="display: none;">
+            <span><i class="fa-solid fa-filter"></i> Constraints:</span>
+            <span class="constraint-pill" id="pill-product" style="display: none;"></span>
+            <span class="constraint-pill" id="pill-rating" style="display: none;"></span>
+            <span class="constraint-pill" id="pill-threshold">Threshold: 0.35</span>
+            <button class="btn-clear-constraint" id="btn-clear-constraints"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+
+          <!-- Scrollable Chat Messages Thread -->
+          <div class="chat-thread-container" id="chat-thread">
+            
+            <!-- Welcome Assistant Message -->
+            <div class="chat-bubble-row assistant">
+              <div class="chat-avatar assistant">
+                <i class="fa-solid fa-brain"></i>
+              </div>
+              <div class="chat-bubble-body">
+                <div class="chat-bubble-text">
+                  <p>Hello! I am your <strong>E-Commerce Intelligence Assistant</strong>. I analyze customer reviews using grounded vector search and real-time sentiment analytics.</p>
+                  <p>Ask any question or click one of the suggested query chips above to inspect product feedback.</p>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Chat Input Bar -->
+          <form id="chat-form" class="chat-input-wrapper">
+            <input
+              type="text"
+              id="chat-input"
+              placeholder="Ask an analytical question regarding customer reviews..."
+              autocomplete="off"
+              required
+            />
+            <button type="submit" class="btn-chat-send" id="btn-send" title="Send Inquiry">
+              <i class="fa-solid fa-arrow-up"></i>
+            </button>
+          </form>
+        </div>
+
+        <!-- 3. BEST PERFORMING & WATCHLIST TABLE (Matching "Best Selling Products" Table) -->
+        <div class="dash-card">
+          <div class="dash-card-header">
+            <div class="card-title-group">
+              <h3>Product Performance Benchmark</h3>
+              <p>Top rated vs critical products in catalog</p>
+            </div>
+            <div class="card-action-more"><i class="fa-solid fa-ellipsis"></i></div>
+          </div>
+
+          <table class="products-table-clean">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>PRODUCT FOCUS</th>
+                <th>REVIEWS</th>
+                <th>SENTIMENT</th>
+                <th>CSAT RATING</th>
+              </tr>
+            </thead>
+            <tbody id="products-table-body">
+              <!-- Dynamically populated from /analytics/products -->
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+
+      <!-- RIGHT COLUMN: Widgets matching reference image -->
+      <div class="grid-col-right">
+
+        <!-- 1. PRODUCT CSAT COMPARISON (Matching "Most Day Active" in screenshot) -->
+        <div class="dash-card">
+          <div class="dash-card-header">
+            <div class="card-title-group">
+              <h3>Product CSAT Comparison</h3>
+              <p>Average ratings across all 10 products</p>
+            </div>
+            <div class="card-action-more"><i class="fa-solid fa-ellipsis"></i></div>
+          </div>
+
+          <div class="bar-chart-container">
+            <canvas id="productBarChart"></canvas>
+          </div>
+        </div>
+
+        <!-- 2. COMPLAINT CATEGORY GAUGE (Matching "Repeat Customer Rate" Gauge) -->
+        <div class="dash-card">
+          <div class="dash-card-header">
+            <div class="card-title-group">
+              <h3>Complaint Topic Share</h3>
+              <p>Mined defect categories proportion</p>
+            </div>
+            <div class="card-action-more"><i class="fa-solid fa-ellipsis"></i></div>
+          </div>
+
+          <div class="gauge-chart-container">
+            <canvas id="complaintsGaugeChart"></canvas>
+          </div>
+        </div>
+
+        <!-- 3. RETRIEVAL & FILTER PARAMETERS -->
+        <div class="dash-card filter-box-card">
+          <div class="dash-card-header">
+            <div class="card-title-group">
+              <h3>Query & Retrieval Filters</h3>
+              <p>Fine-tune RAG vector search</p>
+            </div>
+            <button class="icon-action-btn" id="btn-reset-filters" title="Reset Filters"><i class="fa-solid fa-rotate-left"></i></button>
+          </div>
+
+          <!-- Product Filter -->
+          <div class="filter-input-group">
+            <label for="filter-product">Product Target</label>
+            <select id="filter-product" class="filter-select">
+              <option value="">All Products (Auto-Detect)</option>
+              <option value="P101">P101 — Battery & Camera</option>
+              <option value="P102">P102 — High Complaints (1.8★)</option>
+              <option value="P103">P103 — Gaming & Speed</option>
+              <option value="P104">P104 — Slim & Lightweight</option>
+              <option value="P105">P105 — Budget & Value</option>
+              <option value="P106">P106 — Sound & Bass</option>
+              <option value="P107">P107 — Rugged Durability</option>
+              <option value="P108">P108 — Display & Video</option>
+              <option value="P109">P109 — Fast Charging</option>
+              <option value="P110">P110 — Photo & Zoom</option>
+            </select>
+          </div>
+
+          <!-- Star Rating Filter -->
+          <div class="filter-input-group">
+            <label for="filter-rating">Customer Rating</label>
+            <select id="filter-rating" class="filter-select">
+              <option value="">All Star Ratings</option>
+              <option value="complaints">Only Complaints (1-2★)</option>
+              <option value="positive">Only Positive (4-5★)</option>
+              <option value="5">5★ Only</option>
+              <option value="4">4★ Only</option>
+              <option value="3">3★ Only</option>
+              <option value="2">2★ Only</option>
+              <option value="1">1★ Only</option>
+            </select>
+          </div>
+
+          <!-- Cosine Threshold Slider -->
+          <div class="filter-input-group">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <label for="filter-threshold">Cosine Threshold</label>
+              <span class="slider-val-tag" id="label-threshold-val">0.35</span>
+            </div>
+            <input type="range" id="filter-threshold" min="0.10" max="0.80" step="0.05" value="0.35" class="slider-clean">
+          </div>
+
+          <!-- Top K Selector -->
+          <div class="filter-input-group">
+            <label for="filter-topk">Top-K Retrieved Reviews</label>
+            <select id="filter-topk" class="filter-select">
+              <option value="3">3 Reviews</option>
+              <option value="5" selected>5 Reviews</option>
+              <option value="8">8 Reviews</option>
+              <option value="10">10 Reviews</option>
+            </select>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- CITATION INSPECTOR MODAL -->
+  <div class="modal-backdrop-light" id="citation-modal" style="display: none;">
+    <div class="modal-card-clean">
+      <div class="modal-header">
+        <h4 id="modal-title" style="color: #1e293b; font-weight: 700;">Review Citation</h4>
+        <button class="icon-action-btn" id="btn-close-modal"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+          <span class="trend-badge neutral" id="modal-product-badge">Product P102</span>
+          <span class="trend-badge positive" id="modal-rating-badge">Rating 2★</span>
+          <span class="trend-badge neutral" id="modal-similarity-badge">Similarity 0.72</span>
+        </div>
+        <div class="modal-quote-box" id="modal-text">
+          Review quote...
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-promo" id="btn-modal-dismiss" style="background: #2563eb; color: #fff;">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
