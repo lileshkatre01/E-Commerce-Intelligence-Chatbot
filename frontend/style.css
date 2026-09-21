@@ -1022,6 +1022,112 @@ body {
 }
 
 /* ==========================================================================
+   TOP UNDER DEVELOPMENT ALERT BANNER BAR
+   ========================================================================== */
+
+.dev-alert-banner {
+  background: linear-gradient(90deg, #eff6ff 0%, #ffffff 100%);
+  border: 1px solid #bfdbfe;
+  border-left: 5px solid #2563eb;
+  border-radius: 14px;
+  padding: 14px 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.08);
+  animation: bannerSlideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transition: all 0.25s ease;
+}
+
+.dev-alert-banner.warning {
+  background: linear-gradient(90deg, #fffbeb 0%, #ffffff 100%);
+  border-color: #fde68a;
+  border-left-color: #f59e0b;
+}
+
+.dev-alert-banner.info {
+  background: linear-gradient(90deg, #eff6ff 0%, #ffffff 100%);
+  border-color: #bfdbfe;
+  border-left-color: #2563eb;
+}
+
+.banner-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.banner-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.banner-icon-badge {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: #dbeafe;
+  color: #2563eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.05rem;
+  flex-shrink: 0;
+}
+
+.dev-alert-banner.warning .banner-icon-badge {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.banner-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.banner-text strong {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.banner-text span {
+  font-size: 0.82rem;
+  color: #475569;
+}
+
+.banner-dismiss-btn {
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  font-size: 1.1rem;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+}
+
+.banner-dismiss-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #0f172a;
+}
+
+@keyframes bannerSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ==========================================================================
    DEVELOPMENT NOTICE TOAST & FLOATING BAR
    ========================================================================== */
 

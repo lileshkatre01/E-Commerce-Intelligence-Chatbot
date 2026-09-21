@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ReviewIQ Enterprise | E-Commerce Customer Intelligence Suite</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=5">
   <!-- Google Fonts: Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -31,25 +31,25 @@
 
       <nav class="sidebar-nav">
         <div class="nav-label">Navigation</div>
-        <a href="#" class="nav-item active" id="nav-products">
+        <a href="javascript:void(0)" class="nav-item active" id="nav-products" onclick="showDevBanner('Products Workspace', 'You are currently viewing the real-time Products & Customer Intelligence workspace.', 'info')">
           <i class="fa-solid fa-cube"></i>
           <span>Products</span>
         </a>
-        <a href="#" class="nav-item" id="nav-sentiment">
+        <a href="javascript:void(0)" class="nav-item" id="nav-sentiment" onclick="showDevBanner('Customers Directory', 'This function is currently under development. Customer cohort tracking and segmentation analysis will arrive in the ReviewIQ v3.1 release.', 'warning')">
           <i class="fa-solid fa-user-group"></i>
           <span>Customers</span>
         </a>
-        <a href="#" class="nav-item" id="nav-reviews">
+        <a href="javascript:void(0)" class="nav-item" id="nav-reviews" onclick="showDevBanner('Deep Analytics Module', 'This function is currently under development. Advanced longitudinal reporting and custom chart views will be enabled soon.', 'warning')">
           <i class="fa-solid fa-chart-line"></i>
           <span>Analytics</span>
         </a>
-        <a href="#" class="nav-item" id="nav-complaints">
+        <a href="javascript:void(0)" class="nav-item" id="nav-complaints" onclick="showDevBanner('Complaints Center', 'This function is currently under development. Automated ticket dispatching and defect tracking are in progress.', 'warning')">
           <i class="fa-solid fa-triangle-exclamation"></i>
           <span>Complaints</span>
         </a>
 
         <div class="nav-label" style="margin-top: 10px;">Workspace</div>
-        <a href="#" class="nav-item" id="btn-new-chat">
+        <a href="javascript:void(0)" class="nav-item" id="btn-new-chat">
           <i class="fa-solid fa-plus-circle"></i>
           <span>New Analysis</span>
         </a>
@@ -76,6 +76,20 @@
 
   <!-- MAIN APPLICATION CONTENT -->
   <main class="app-main">
+
+    <!-- TOP UNDER DEVELOPMENT ALERT BANNER BAR -->
+    <div id="dev-banner-bar" class="dev-alert-banner" style="display: none;">
+      <div class="banner-inner">
+        <div class="banner-left">
+          <div class="banner-icon-badge"><i class="fa-solid fa-screwdriver-wrench"></i></div>
+          <div class="banner-text">
+            <strong id="dev-banner-title">Feature Under Development</strong>
+            <span id="dev-banner-msg">This function is currently under development.</span>
+          </div>
+        </div>
+        <button class="banner-dismiss-btn" onclick="dismissDevBanner()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+    </div>
 
     <!-- TOP KPI ROW (4 Cards in a row, matching reference image) -->
     <section class="kpi-row">
@@ -418,6 +432,6 @@
   <!-- FLOATING NOTIFICATION TOAST CONTAINER -->
   <div class="dev-toast-container" id="toast-container"></div>
 
-  <script src="app.js"></script>
+  <script src="app.js?v=5"></script>
 </body>
 </html>

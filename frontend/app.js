@@ -1028,3 +1028,35 @@ function showDevNotice(title, message, type = "warning") {
   closeBtn.addEventListener("click", dismiss);
   timer = setTimeout(dismiss, 4200);
 }
+
+// ==========================================================================
+// TOP UNDER DEVELOPMENT ALERT BANNER BAR CONTROLLER
+// ==========================================================================
+
+window.showDevBanner = function (title, message, type = "warning") {
+  const banner = document.getElementById("dev-banner-bar");
+  const titleEl = document.getElementById("dev-banner-title");
+  const msgEl = document.getElementById("dev-banner-msg");
+
+  if (banner && titleEl && msgEl) {
+    banner.className = `dev-alert-banner ${type}`;
+    titleEl.textContent = title || "Feature Under Development";
+    msgEl.textContent =
+      message ||
+      "This function is currently under development and will be available in the upcoming release.";
+    banner.style.display = "block";
+    banner.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  // Also trigger floating notification toast
+  if (typeof showDevNotice === "function") {
+    showDevNotice(title, message, type);
+  }
+};
+
+window.dismissDevBanner = function () {
+  const banner = document.getElementById("dev-banner-bar");
+  if (banner) {
+    banner.style.display = "none";
+  }
+};
