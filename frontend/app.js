@@ -156,6 +156,82 @@ function initEventListeners() {
 
   // Reindex
   if (elements.reindexBtn) elements.reindexBtn.addEventListener("click", handleReindex);
+
+  // Sidebar navigation items -> Under Development Notice
+  const navSentiment = document.getElementById("nav-sentiment");
+  if (navSentiment) {
+    navSentiment.addEventListener("click", (e) => {
+      e.preventDefault();
+      showDevNotice(
+        "Feature Under Development",
+        "The Customer Cohorts & Segmentation module is currently in development for the ReviewIQ v3.1 release.",
+        "warning"
+      );
+    });
+  }
+
+  const navReviews = document.getElementById("nav-reviews");
+  if (navReviews) {
+    navReviews.addEventListener("click", (e) => {
+      e.preventDefault();
+      showDevNotice(
+        "Module In Progress",
+        "Deep longitudinal trend exploration is in progress. Real-time aggregated metrics are accessible on this overview dashboard.",
+        "warning"
+      );
+    });
+  }
+
+  const navComplaints = document.getElementById("nav-complaints");
+  if (navComplaints) {
+    navComplaints.addEventListener("click", (e) => {
+      e.preventDefault();
+      showDevNotice(
+        "Feature Under Development",
+        "Automated customer complaint ticket dispatching is currently under development. Mined defect topics are visualized on the right panel.",
+        "warning"
+      );
+    });
+  }
+
+  const navProducts = document.getElementById("nav-products");
+  if (navProducts) {
+    navProducts.addEventListener("click", (e) => {
+      e.preventDefault();
+      showDevNotice(
+        "Active Workspace",
+        "You are currently viewing the Products Intelligence & Customer Sentiment dashboard.",
+        "info"
+      );
+    });
+  }
+
+  // Card action buttons (...)
+  document.querySelectorAll(".card-action-more").forEach((btn) => {
+    if (btn.id !== "btn-clear-chat") {
+      btn.style.cursor = "pointer";
+      btn.setAttribute("title", "Card Options");
+      btn.addEventListener("click", () => {
+        showDevNotice(
+          "Options Under Development",
+          "Card customization, CSV/PDF export, and custom report filters are scheduled for the next release.",
+          "info"
+        );
+      });
+    }
+  });
+
+  // Top KPI metric cards
+  document.querySelectorAll(".metric-card").forEach((card) => {
+    card.style.cursor = "pointer";
+    card.addEventListener("click", () => {
+      showDevNotice(
+        "Drilldown In Progress",
+        "Historical timeseries drilldowns for this metric are currently under development.",
+        "info"
+      );
+    });
+  });
 }
 
 // ==========================================================================
@@ -786,6 +862,11 @@ function resetAllFilters() {
   if (elements.labelThresholdVal) elements.labelThresholdVal.textContent = "0.35";
   if (elements.filterTopK) elements.filterTopK.value = "5";
   updateFilterState();
+  showDevNotice(
+    "Filters Reset",
+    "Product and cosine similarity threshold filters have been restored to defaults.",
+    "info"
+  );
 }
 
 // ==========================================================================
@@ -814,6 +895,11 @@ async function handleResetSession() {
       </div>
     `;
   }
+  showDevNotice(
+    "New Analysis Session",
+    "Conversation memory reset. You can now start a fresh inquiry.",
+    "success"
+  );
 }
 
 async function handleReindex() {
@@ -824,11 +910,15 @@ async function handleReindex() {
   try {
     const res = await fetch(`${API_BASE}/reindex`, { method: "POST" });
     const data = await res.json();
-    alert(`FAISS Vector Index & Analytics reloaded: ${data.documents_count || 50} reviews synchronized.`);
+    showDevNotice(
+      "Index Synchronized",
+      `FAISS vector database reloaded with ${data.documents_count || 50} verified customer reviews.`,
+      "success"
+    );
     loadExecutiveKPIs();
     loadAnalyticsCharts();
   } catch (err) {
-    alert("Failed to rebuild index: " + err);
+    showDevNotice("Reindex Failed", String(err), "warning");
   } finally {
     if (icon) icon.classList.remove("fa-spin");
   }
@@ -882,4 +972,59 @@ function scrollToBottom() {
       behavior: "smooth",
     });
   }
+}
+
+// ==========================================================================
+// NOTIFICATION & DEVELOPMENT NOTICE TOAST
+// ==========================================================================
+
+function showDevNotice(title, message, type = "warning") {
+  const container = document.getElementById("toast-container") || document.body;
+  const toast = document.createElement("div");
+  toast.className = `dev-toast ${type}`;
+
+  const iconClass =
+    type === "success"
+      ? "fa-circle-check"
+      : type === "info"
+      ? "fa-circle-info"
+      : "fa-screwdriver-wrench";
+
+  const badgeText =
+    type === "success"
+      ? "COMPLETED"
+      : type === "info"
+      ? "SYSTEM INFO"
+      : "UNDER DEVELOPMENT";
+
+  toast.innerHTML = `
+    <div class="dev-toast-icon">
+      <i class="fa-solid ${iconClass}"></i>
+    </div>
+    <div class="dev-toast-content">
+      <div class="dev-toast-header">
+        <span class="dev-toast-badge">${badgeText}</span>
+        <button class="dev-toast-close" title="Dismiss">&times;</button>
+      </div>
+      <div class="dev-toast-title">${escapeHtml(title)}</div>
+      <div class="dev-toast-msg">${escapeHtml(message)}</div>
+    </div>
+    <div class="dev-toast-progress"></div>
+  `;
+
+  container.appendChild(toast);
+
+  // Close handlers
+  const closeBtn = toast.querySelector(".dev-toast-close");
+  let timer = null;
+  const dismiss = () => {
+    if (timer) clearTimeout(timer);
+    toast.classList.add("hiding");
+    setTimeout(() => {
+      if (toast.parentElement) toast.remove();
+    }, 280);
+  };
+
+  closeBtn.addEventListener("click", dismiss);
+  timer = setTimeout(dismiss, 4200);
 }
