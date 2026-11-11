@@ -1,13 +1,16 @@
 import argparse
+import io
 import sys
 from typing import Any, Dict, List, Optional
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
+import pandas as pd
 from pydantic import BaseModel, Field
 
 from backend.analytics import ReviewAnalytics
 from backend.chatbot import ReviewChatbot
 from backend.config import DEFAULT_TOP_K, GEMINI_MODEL, SIMILARITY_THRESHOLD
+from backend.dataset_manager import DatasetManager
 from backend.retriever import ReviewRetriever
 
 from pathlib import Path
@@ -40,6 +43,11 @@ app.add_middleware(
 retriever = ReviewRetriever()
 analytics = ReviewAnalytics()
 chatbot = ReviewChatbot(retriever=retriever, analytics=analytics)
+dataset_manager = DatasetManager()
+active_dataset_meta: Dict[str, Any] = {
+    "active_dataset": "Default Catalog (P101-P110)",
+    "is_default": True
+}
 
 
 class ChatRequest(BaseModel):
@@ -254,6 +262,84 @@ def get_complaint_analytics():
         return analytics.get_complaint_topics()
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Analytics error: {e}")
+
+
+# ---------------------------------------------------------
+# Dynamic Dataset Management Endpoints
+# ---------------------------------------------------------
+@app.get("/dataset/status")
+def get_dataset_status():
+    """Returns current active dataset info and statistics."""
+    try:
+        df = analytics.get_df()
+        products = sorted(df["product_id"].unique().tolist())
+        return {
+            "status": "success",
+            "active_dataset": active_dataset_meta.get("active_dataset", "Default Catalog (P101-P110)"),
+            "is_default": active_dataset_meta.get("is_default", True),
+            "total_reviews": len(df),
+            "total_products": len(products),
+            "products": products,
+            "avg_rating": round(float(df["rating"].mean()), 2) if len(df) > 0 else 0.0,
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch dataset status: {e}")
+
+
+@app.post("/dataset/upload")
+async def upload_custom_dataset(file: UploadFile = File(...)):
+    """Upload a custom CSV review file, validate, sanitize, and re-index on the fly."""
+    if not file.filename.lower().endswith(".csv"):
+        raise HTTPException(status_code=400, detail="Only CSV files (.csv) are supported.")
+
+    try:
+        contents = await file.read()
+        try:
+            df = pd.read_csv(io.BytesIO(contents), on_bad_lines="skip")
+        except Exception as parse_err:
+            raise HTTPException(status_code=400, detail=f"CSV Parsing Error: {parse_err}")
+
+        stats = dataset_manager.activate_custom_dataset(
+            df=df,
+            filename=file.filename,
+            retriever=retriever,
+            analytics=analytics,
+            chatbot=chatbot
+        )
+
+        active_dataset_meta["active_dataset"] = file.filename
+        active_dataset_meta["is_default"] = False
+
+        return {
+            "status": "success",
+            "message": f"Dataset '{file.filename}' processed and indexed successfully!",
+            "stats": stats
+        }
+    except ValueError as val_err:
+        raise HTTPException(status_code=422, detail=str(val_err))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to activate dataset: {e}")
+
+
+@app.post("/dataset/reset-default")
+def reset_to_default_dataset():
+    """Restore the default pre-packaged reviews dataset and rebuild index."""
+    try:
+        stats = dataset_manager.restore_default_dataset(
+            retriever=retriever,
+            analytics=analytics,
+            chatbot=chatbot
+        )
+        active_dataset_meta["active_dataset"] = stats["active_dataset"]
+        active_dataset_meta["is_default"] = True
+
+        return {
+            "status": "success",
+            "message": "Default catalog restored and re-indexed successfully!",
+            "stats": stats
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to restore default dataset: {e}")
 
 
 # ---------------------------------------------------------

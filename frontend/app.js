@@ -91,6 +91,8 @@ document.addEventListener("DOMContentLoaded", () => {
   initEventListeners();
   loadExecutiveKPIs();
   loadAnalyticsCharts();
+  loadDatasetStatus();
+  initDatasetUploadHandlers();
 });
 
 function initEventListeners() {
@@ -1060,3 +1062,272 @@ window.dismissDevBanner = function () {
     banner.style.display = "none";
   }
 };
+
+// ==========================================================================
+// DATASET STATUS & CUSTOM CSV UPLOAD CONTROLLER
+// ==========================================================================
+
+let selectedCsvFile = null;
+
+async function loadDatasetStatus() {
+  try {
+    const res = await fetch(`${API_BASE}/dataset/status`);
+    if (!res.ok) return;
+    const data = await res.json();
+
+    // 1. Update Workspace Badge
+    const elName = document.getElementById("active-dataset-name");
+    const elBadge = document.getElementById("active-dataset-badge");
+    if (elName) elName.textContent = data.active_dataset || "Default Catalog (P101-P110)";
+    if (elBadge) {
+      if (data.is_default) {
+        elBadge.classList.remove("custom");
+      } else {
+        elBadge.classList.add("custom");
+      }
+    }
+
+    // 2. Update Sidebar Promo Card
+    const promoDesc = document.querySelector(".sidebar-promo-card .promo-desc");
+    if (promoDesc) {
+      promoDesc.textContent = `FAISS vector index operational with ${data.total_reviews} reviews across ${data.total_products} products.`;
+    }
+
+    // 3. Dynamically Populate Product Filter Dropdown
+    if (elements.filterProduct && data.products && data.products.length > 0) {
+      const currentSelected = elements.filterProduct.value;
+      elements.filterProduct.innerHTML = '<option value="">All Products (Auto-Detect)</option>';
+      data.products.forEach((pid) => {
+        const opt = document.createElement("option");
+        opt.value = pid;
+        const meta = PRODUCT_INFO[pid];
+        opt.textContent = meta ? `${pid} — ${meta.name}` : `${pid} (Catalog Product)`;
+        elements.filterProduct.appendChild(opt);
+      });
+      if (data.products.includes(currentSelected)) {
+        elements.filterProduct.value = currentSelected;
+      }
+    }
+  } catch (err) {
+    console.warn("Failed to load dataset status:", err);
+  }
+}
+
+function initDatasetUploadHandlers() {
+  const modal = document.getElementById("upload-dataset-modal");
+  const btnOpenModal = document.getElementById("btn-open-upload-modal");
+  const btnOpenModalNav = document.getElementById("btn-open-upload-modal-nav");
+  const btnCloseModal = document.getElementById("btn-close-upload-modal");
+  const btnCancelUpload = document.getElementById("btn-cancel-upload");
+  const btnRestoreDefault = document.getElementById("btn-restore-default");
+
+  const dropzone = document.getElementById("upload-dropzone");
+  const fileInput = document.getElementById("csv-file-input");
+  const selectedBox = document.getElementById("file-selected-box");
+  const selectedFilename = document.getElementById("selected-filename");
+  const selectedFilesize = document.getElementById("selected-filesize");
+  const btnRemoveFile = document.getElementById("btn-remove-selected-file");
+  const btnSubmitUpload = document.getElementById("btn-submit-upload");
+
+  const progressWrapper = document.getElementById("upload-progress-wrapper");
+  const progressFill = document.getElementById("upload-progress-fill");
+  const progressText = document.getElementById("upload-status-text");
+  const progressPercent = document.getElementById("upload-percent-text");
+
+  // Modal open/close
+  const openModal = () => {
+    resetUploadModalState();
+    if (modal) modal.style.display = "flex";
+  };
+  const closeModal = () => {
+    if (modal) modal.style.display = "none";
+    resetUploadModalState();
+  };
+
+  if (btnOpenModal) btnOpenModal.addEventListener("click", openModal);
+  if (btnOpenModalNav) btnOpenModalNav.addEventListener("click", openModal);
+  if (btnCloseModal) btnCloseModal.addEventListener("click", closeModal);
+  if (btnCancelUpload) btnCancelUpload.addEventListener("click", closeModal);
+
+  // Dropzone click
+  if (dropzone && fileInput) {
+    dropzone.addEventListener("click", () => fileInput.click());
+
+    // Drag & Drop
+    ["dragenter", "dragover"].forEach((evt) => {
+      dropzone.addEventListener(evt, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropzone.classList.add("dragover");
+      });
+    });
+
+    ["dragleave", "drop"].forEach((evt) => {
+      dropzone.addEventListener(evt, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropzone.classList.remove("dragover");
+      });
+    });
+
+    dropzone.addEventListener("drop", (e) => {
+      if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        handleFileSelection(e.dataTransfer.files[0]);
+      }
+    });
+
+    fileInput.addEventListener("change", (e) => {
+      if (e.target.files && e.target.files.length > 0) {
+        handleFileSelection(e.target.files[0]);
+      }
+    });
+  }
+
+  function handleFileSelection(file) {
+    if (!file.name.toLowerCase().endsWith(".csv")) {
+      showDevNotice("Invalid File Type", "Please upload a valid .csv file.", "warning");
+      return;
+    }
+    selectedCsvFile = file;
+    if (selectedFilename) selectedFilename.textContent = file.name;
+    if (selectedFilesize) selectedFilesize.textContent = `${(file.size / 1024).toFixed(1)} KB`;
+    if (selectedBox) selectedBox.style.display = "flex";
+    if (dropzone) dropzone.style.display = "none";
+    if (btnSubmitUpload) btnSubmitUpload.disabled = false;
+  }
+
+  if (btnRemoveFile) {
+    btnRemoveFile.addEventListener("click", () => {
+      resetUploadModalState();
+    });
+  }
+
+  function resetUploadModalState() {
+    selectedCsvFile = null;
+    if (fileInput) fileInput.value = "";
+    if (selectedBox) selectedBox.style.display = "none";
+    if (dropzone) dropzone.style.display = "block";
+    if (btnSubmitUpload) btnSubmitUpload.disabled = true;
+    if (progressWrapper) progressWrapper.style.display = "none";
+    if (progressFill) progressFill.style.width = "0%";
+  }
+
+  // Submit upload to backend
+  if (btnSubmitUpload) {
+    btnSubmitUpload.addEventListener("click", async () => {
+      if (!selectedCsvFile) return;
+
+      btnSubmitUpload.disabled = true;
+      if (btnCancelUpload) btnCancelUpload.disabled = true;
+      if (progressWrapper) progressWrapper.style.display = "block";
+
+      // Simulate step progression
+      let p = 15;
+      if (progressFill) progressFill.style.width = `${p}%`;
+      if (progressPercent) progressPercent.textContent = `${p}%`;
+      if (progressText) progressText.textContent = "Validating schema & cleaning rows...";
+
+      const pInterval = setInterval(() => {
+        if (p < 85) {
+          p += 12;
+          if (progressFill) progressFill.style.width = `${p}%`;
+          if (progressPercent) progressPercent.textContent = `${p}%`;
+          if (p > 50 && progressText) {
+            progressText.textContent = "Generating SentenceTransformer embeddings & building FAISS index...";
+          }
+        }
+      }, 400);
+
+      const formData = new FormData();
+      formData.append("file", selectedCsvFile);
+
+      try {
+        const res = await fetch(`${API_BASE}/dataset/upload`, {
+          method: "POST",
+          body: formData,
+        });
+
+        clearInterval(pInterval);
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.detail || "Failed to process dataset.");
+        }
+
+        const data = await res.json();
+        if (progressFill) progressFill.style.width = "100%";
+        if (progressPercent) progressPercent.textContent = "100%";
+        if (progressText) progressText.textContent = "Complete!";
+
+        showDevNotice(
+          "Dataset Activated",
+          `Successfully indexed ${data.stats.valid_rows} reviews across ${data.stats.product_count} products.`,
+          "success"
+        );
+
+        setTimeout(() => {
+          closeModal();
+          // Reload all views
+          loadExecutiveKPIs();
+          loadAnalyticsCharts();
+          loadDatasetStatus();
+
+          // Reset chat thread and append notification
+          if (elements.chatThread) {
+            elements.chatThread.innerHTML = "";
+            appendBotMessage(
+              `**New Dataset Loaded: \`${data.stats.active_dataset}\`**\n\n` +
+              `Successfully indexed **${data.stats.valid_rows} customer reviews** covering products: ` +
+              `\`${data.stats.unique_products.join(", ")}\`.\n\n` +
+              `You can now ask questions about these products!`
+            );
+          }
+        }, 600);
+      } catch (err) {
+        clearInterval(pInterval);
+        if (progressWrapper) progressWrapper.style.display = "none";
+        btnSubmitUpload.disabled = false;
+        if (btnCancelUpload) btnCancelUpload.disabled = false;
+        showDevNotice("Upload Failed", err.message, "warning");
+      }
+    });
+  }
+
+  // Restore Default Dataset
+  if (btnRestoreDefault) {
+    btnRestoreDefault.addEventListener("click", async () => {
+      if (!confirm("Are you sure you want to restore the default electronics catalog (P101-P110)?")) {
+        return;
+      }
+      btnRestoreDefault.disabled = true;
+      try {
+        const res = await fetch(`${API_BASE}/dataset/reset-default`, { method: "POST" });
+        if (!res.ok) throw new Error("Failed to restore default dataset.");
+        const data = await res.json();
+
+        showDevNotice(
+          "Default Catalog Restored",
+          "Re-indexed default 50 customer reviews for products P101-P110.",
+          "info"
+        );
+
+        loadExecutiveKPIs();
+        loadAnalyticsCharts();
+        loadDatasetStatus();
+
+        if (elements.chatThread) {
+          elements.chatThread.innerHTML = "";
+          appendBotMessage(
+            "**Restored Default Catalog (P101–P110)**\n\n" +
+            "The system has been restored to the default 50 customer reviews. " +
+            "How can I help you analyze the catalog today?"
+          );
+        }
+      } catch (err) {
+        showDevNotice("Reset Failed", err.message, "warning");
+      } finally {
+        btnRestoreDefault.disabled = false;
+      }
+    });
+  }
+}

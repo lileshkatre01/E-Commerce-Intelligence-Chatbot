@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ReviewIQ Enterprise | E-Commerce Customer Intelligence Suite</title>
-  <link rel="stylesheet" href="style.css?v=5">
+  <link rel="stylesheet" href="style.css?v=8">
   <!-- Google Fonts: Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,6 +13,113 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <!-- Chart.js for Analytics Visualizations -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- THEME MATCH STYLES FOR WORKSPACE HEADER & BUTTONS -->
+  <style>
+    .top-workspace-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #ffffff !important;
+      border: 1px solid #eef2f6 !important;
+      border-radius: 16px !important;
+      padding: 12px 20px !important;
+      margin-bottom: 22px !important;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03) !important;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .workspace-left-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .workspace-title-label {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #64748b;
+    }
+    .dataset-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #eff6ff !important;
+      border: 1px solid #bfdbfe !important;
+      color: #1d4ed8 !important;
+      font-size: 0.84rem;
+      font-weight: 600;
+      padding: 5px 14px;
+      border-radius: 9999px !important;
+      transition: all 0.2s ease;
+    }
+    .dataset-pill.custom {
+      background: #ecfdf5 !important;
+      border-color: #a7f3d0 !important;
+      color: #047857 !important;
+    }
+    .workspace-right-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .btn-ws-primary {
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 8px !important;
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+      color: #ffffff !important;
+      border: none !important;
+      font-size: 0.84rem !important;
+      font-weight: 600 !important;
+      font-family: 'Inter', sans-serif !important;
+      padding: 9px 18px !important;
+      border-radius: 9999px !important;
+      cursor: pointer !important;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.28) !important;
+      outline: none !important;
+      line-height: 1.4 !important;
+    }
+    .btn-ws-primary:hover {
+      background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%) !important;
+      box-shadow: 0 6px 16px rgba(37, 99, 235, 0.38) !important;
+      transform: translateY(-1px) !important;
+    }
+    .btn-ws-primary:active {
+      transform: translateY(0) !important;
+    }
+    .btn-ws-secondary {
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 7px !important;
+      background: #ffffff !important;
+      color: #475569 !important;
+      border: 1px solid #e2e8f0 !important;
+      font-size: 0.84rem !important;
+      font-weight: 600 !important;
+      font-family: 'Inter', sans-serif !important;
+      padding: 9px 16px !important;
+      border-radius: 9999px !important;
+      cursor: pointer !important;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03) !important;
+      outline: none !important;
+      line-height: 1.4 !important;
+    }
+    .btn-ws-secondary:hover {
+      background: #f8fafc !important;
+      border-color: #cbd5e1 !important;
+      color: #1e293b !important;
+      transform: translateY(-1px) !important;
+    }
+    .btn-ws-secondary:active {
+      transform: translateY(0) !important;
+    }
+  </style>
 </head>
 <body>
 
@@ -49,6 +156,10 @@
         </a>
 
         <div class="nav-label" style="margin-top: 10px;">Workspace</div>
+        <a href="javascript:void(0)" class="nav-item" id="btn-open-upload-modal-nav">
+          <i class="fa-solid fa-cloud-arrow-up"></i>
+          <span>Upload Dataset</span>
+        </a>
         <a href="javascript:void(0)" class="nav-item" id="btn-new-chat">
           <i class="fa-solid fa-plus-circle"></i>
           <span>New Analysis</span>
@@ -76,6 +187,27 @@
 
   <!-- MAIN APPLICATION CONTENT -->
   <main class="app-main">
+
+    <!-- TOP WORKSPACE HEADER & ACTIVE DATASET STATUS BAR -->
+    <header class="top-workspace-header">
+      <div class="workspace-left-meta">
+        <span class="workspace-title-label">Active Dataset:</span>
+        <span class="dataset-pill" id="active-dataset-badge">
+          <i class="fa-solid fa-database"></i>
+          <span id="active-dataset-name">Default Catalog (P101-P110)</span>
+        </span>
+      </div>
+      <div class="workspace-right-actions">
+        <button class="btn-ws-primary" id="btn-open-upload-modal">
+          <i class="fa-solid fa-cloud-arrow-up"></i>
+          <span>Upload Custom CSV</span>
+        </button>
+        <button class="btn-ws-secondary" id="btn-restore-default" title="Restore Default Dataset">
+          <i class="fa-solid fa-arrow-rotate-left"></i>
+          <span>Restore Default</span>
+        </button>
+      </div>
+    </header>
 
     <!-- TOP UNDER DEVELOPMENT ALERT BANNER BAR -->
     <div id="dev-banner-bar" class="dev-alert-banner" style="display: none;">
@@ -406,6 +538,59 @@
 
   </main>
 
+  <!-- UPLOAD DATASET MODAL -->
+  <div class="modal-backdrop-light" id="upload-dataset-modal" style="display: none;">
+    <div class="modal-card-clean" style="max-width: 540px;">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 9px;">
+          <i class="fa-solid fa-cloud-arrow-up" style="color: #2563eb; font-size: 1.1rem;"></i>
+          <h4 style="color: #1e293b; font-weight: 700; margin: 0;">Upload Custom Reviews CSV</h4>
+        </div>
+        <button class="icon-action-btn" id="btn-close-upload-modal"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="upload-dropzone" id="upload-dropzone">
+          <input type="file" id="csv-file-input" accept=".csv" style="display: none;">
+          <div class="dropzone-icon"><i class="fa-solid fa-file-csv"></i></div>
+          <div class="dropzone-text">Click to browse or drag & drop CSV file</div>
+          <div class="dropzone-subtext">Supports Amazon, Shopify, Flipkart, or custom review formats (up to 3,000 rows)</div>
+        </div>
+
+        <div id="file-selected-box" class="file-selected-box" style="display: none;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <i class="fa-solid fa-file-lines" style="color: #2563eb;"></i>
+            <div>
+              <strong id="selected-filename" style="font-size: 0.86rem; color: #1e293b;">filename.csv</strong>
+              <div id="selected-filesize" style="font-size: 0.74rem; color: #64748b;">0 KB</div>
+            </div>
+          </div>
+          <button class="icon-action-btn" id="btn-remove-selected-file" title="Remove file"><i class="fa-solid fa-trash-can" style="color: #ef4444;"></i></button>
+        </div>
+
+        <div class="upload-guidelines-box">
+          <strong>Smart Auto-Mapping:</strong> System automatically detects columns for <em>Review Text</em> (comment, feedback, review), <em>Rating</em> (stars, score, 1-5 or 1-10), and <em>Product ID</em> (product, item_id, asin).
+        </div>
+
+        <div id="upload-progress-wrapper" class="upload-progress-wrapper" style="display: none;">
+          <div class="upload-progress-bar-bg">
+            <div id="upload-progress-fill" class="upload-progress-bar-fill"></div>
+          </div>
+          <div class="upload-progress-text">
+            <span id="upload-status-text">Processing and generating vector embeddings...</span>
+            <span id="upload-percent-text">0%</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 10px;">
+        <button class="btn-ws-secondary" id="btn-cancel-upload">Cancel</button>
+        <button class="btn-ws-primary" id="btn-submit-upload" disabled>
+          <i class="fa-solid fa-bolt"></i>
+          <span>Process & Index Dataset</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- CITATION INSPECTOR MODAL -->
   <div class="modal-backdrop-light" id="citation-modal" style="display: none;">
     <div class="modal-card-clean">
@@ -432,6 +617,6 @@
   <!-- FLOATING NOTIFICATION TOAST CONTAINER -->
   <div class="dev-toast-container" id="toast-container"></div>
 
-  <script src="app.js?v=5"></script>
+  <script src="app.js?v=8"></script>
 </body>
 </html>
